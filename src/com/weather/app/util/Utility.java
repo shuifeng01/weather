@@ -1,5 +1,15 @@
 package com.weather.app.util;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 
 import com.weather.app.db.WeatherDB;
@@ -89,6 +99,136 @@ public class Utility {
 			}
 		}
 		return false;
-
 	}
+	/**
+	 * 解析服务器返回的json数据,并存储到本地
+	 * 这是接口http://www.weather.com.cn/data/cityinfo/101010100.html中的信息
+	 * @param context
+	 * @param response
+	 */
+	public static void handleWeatherResponse(Context context,String response){
+		try {
+			JSONObject jsonObject = new JSONObject(response);
+			JSONObject weatherInfo = jsonObject.getJSONObject("weatherinfo");
+			String cityName = weatherInfo.getString("city");
+			String weatherCode = weatherInfo.getString("cityid");
+			String weatherDesp = weatherInfo.getString("weather");
+			String publishTime = weatherInfo.getString("ptime");
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy年M月d日",Locale.CHINA);
+			publishTime = sdf.format(new Date())+" "+publishTime+" "+"发布";
+			saveWeatherInfo(context, cityName, weatherCode, weatherDesp, publishTime);
+		} catch (JSONException e) {			
+			e.printStackTrace();
+		}
+	}
+	/**
+	 * 将天气信息(城市名,代码,天气描述,发布时间)存储到SharedPreferences文件中,
+	 * 这是接口http://www.weather.com.cn/data/cityinfo/101010100.html中的信息
+	 * @param context:会话对象
+	 * @param cityName:城市名
+	 * @param weatherCode:天气代码
+	 * @param weatherDesp:天气描述
+	 * @param publishTime:发布时间
+	 */
+	public static void saveWeatherInfo(Context context,String cityName,String weatherCode
+			,String weatherDesp,String publishTime){
+		SharedPreferences.Editor editor = PreferenceManager
+				.getDefaultSharedPreferences(context).edit();
+		editor.putBoolean("city_selected", true);
+		editor.putString("city_name", cityName);
+		editor.putString("weather_code", weatherCode);
+		editor.putString("weather_desp", weatherDesp);
+		editor.putString("publish_time", publishTime);
+		editor.commit();
+	}
+	/**
+	 * 解析服务器返回的json数据,并存储到本地,天气信息(当前温度和风力等级)
+	 * 这是接口http://www.weather.com.cn/data/sk/101010100.html中的信息
+	 * @param context
+	 * @param response
+	 */
+	public static void handleWeatherResponse_current(Context context,String response){
+		try {
+			JSONObject jsonObject = new JSONObject(response);
+			JSONObject weatherInfo = jsonObject.getJSONObject("weatherinfo");
+			String temp = weatherInfo.getString("temp");
+			String wd = weatherInfo.getString("WD");
+			String ws = weatherInfo.getString("WS");
+			String wdws = wd+","+"风力"+ws;
+			saveWeatherInfo_current(context, temp, wdws);
+		} catch (JSONException e) {			
+			e.printStackTrace();
+		}
+	}
+	/**
+	 * 将天气信息(当前温度和风力等级)存储到SharedPreferences文件中,
+	 * 这是接口http://www.weather.com.cn/data/sk/101010100.html中的信息
+	 * @param context:会话对象
+	 * @param temp:当日温度
+	 * @param wdws:风力等级
+	 */
+	public static void saveWeatherInfo_current(Context context,String temp,String wdws){
+		SharedPreferences.Editor editor = PreferenceManager
+				.getDefaultSharedPreferences(context).edit();
+		editor.putBoolean("city_selected", true);
+		editor.putString("temp", temp);
+		editor.putString("wdws", wdws);
+		editor.commit();
+	}
+	
+	/**
+	 * 未来六天天气信息
+	 * 解析服务器返回的json数据,并存储到本地
+	 * 这是接口http://m.weather.com.cn/data/101010100.html中的信息
+	 * @param context
+	 * @param response
+	 */
+	public static void handleWeatherResponse_sixday(Context context,String response){
+		try {
+			JSONObject jsonObject = new JSONObject(response);
+			JSONObject weatherInfo = jsonObject.getJSONObject("weatherinfo");
+			//当天时间
+			String date_y = weatherInfo.getString("date_y");
+			String week = weatherInfo.getString("week");
+			 //未来六天摄氏温度
+			String temp1 = weatherInfo.getString("temp1");
+			String temp2 = weatherInfo.getString("temp2");
+			String temp3 = weatherInfo.getString("temp3");
+			String temp4 = weatherInfo.getString("temp4");
+			String temp5 = weatherInfo.getString("temp5");
+			String temp6 = weatherInfo.getString("temp6");
+			//未来六天天气描述;
+			String weather1 = weatherInfo.getString("weather1");
+			String weather2 = weatherInfo.getString("weather2");
+			String weather3 = weatherInfo.getString("weather3");
+			String weather4 = weatherInfo.getString("weather4");
+			String weather5 = weatherInfo.getString("weather5");
+			String weather6 = weatherInfo.getString("weather6");
+			/**
+			 * 将未来六天天气信息(.温度和描述)存储到SharedPreferences文件中,
+			 * 这是接口http://m.weather.com.cn/data/101010100.html中的信息
+			 */
+			SharedPreferences.Editor editor = PreferenceManager
+					.getDefaultSharedPreferences(context).edit();
+			editor.putBoolean("city_selected", true);
+			editor.putString("date_y", date_y);
+			editor.putString("week", week);
+			editor.putString("temp1", temp1);
+			editor.putString("weather1", weather1);
+			editor.putString("temp2", temp2);
+			editor.putString("weather2", weather2);
+			editor.putString("temp3", temp3);
+			editor.putString("weather3", weather3);
+			editor.putString("temp4", temp4);
+			editor.putString("weather4", weather4);
+			editor.putString("temp5", temp5);
+			editor.putString("weather5", weather5);
+			editor.putString("temp6", temp6);
+			editor.putString("weather6", weather6);
+			editor.commit();
+		} catch (JSONException e) {			
+			e.printStackTrace();
+		}
+	}
+
 }
